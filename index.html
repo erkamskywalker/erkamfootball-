@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ErkamFootball</title>
+
+<style>
+body{
+    background:#0f172a;
+    color:white;
+    font-family:Arial, sans-serif;
+    margin:0;
+    padding:20px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+}
+
+.card{
+    background:#1e293b;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:15px;
+}
+
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    margin:5px;
+    background:#22c55e;
+    color:white;
+    font-weight:bold;
+}
+
+button:hover{
+    opacity:.85;
+}
+
+input,select{
+    padding:8px;
+    width:100%;
+    margin-bottom:10px;
+    border-radius:6px;
+    border:none;
+}
+
+.stat{
+    margin:5px 0;
+}
+
+.log{
+    background:black;
+    padding:10px;
+    border-radius:8px;
+    height:220px;
+    overflow-y:auto;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>⚽ ErkamFootball</h1>
+
+<div id="createScreen" class="card">
+<h2>Futbolcunu Oluştur</h2>
+
+<input id="name" placeholder="Oyuncu Adı">
+
+<select id="position">
+<option>Forvet</option>
+<option>Kanat</option>
+<option>Orta Saha</option>
+<option>Defans</option>
+</select>
+
+<button onclick="createPlayer()">Kariyere Başla</button>
+</div>
+
+<div id="gameScreen" style="display:none;">
+
+<div class="card">
+<h2 id="playerName"></h2>
+
+<p>Yaş: <span id="age"></span></p>
+<p>Kulüp: <span id="club"></span></p>
+<p>Maaş: €<span id="salary"></span></p>
+<p>Para: €<span id="money"></span></p>
+
+<div class="stat">⚡ Hız: <span id="speed"></span></div>
+<div class="stat">🎯 Şut: <span id="shoot"></span></div>
+<div class="stat">🎨 Teknik: <span id="tech"></span></div>
+<div class="stat">🧠 Pas: <span id="pass"></span></div>
+<div class="stat">💪 Fizik: <span id="physical"></span></div>
+</div>
+
+<div class="card">
+
+<h3>Hafta İşlemleri</h3>
+
+<button onclick="train()">Antrenman</button>
+<button onclick="playMatch()">Maç Oyna</button>
+<button onclick="nextSeason()">Yeni Sezon</button>
+
+</div>
+
+<div class="card">
+<h3>Kariyer Günlüğü</h3>
+<div id="log" class="log"></div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let player = null;
+
+function createPlayer(){
+
+player = {
+name: document.getElementById("name").value || "Erkam",
+position: document.getElementById("position").value,
+
+age:15,
+club:"Altyapı",
+salary:500,
+money:1000,
+
+speed:50,
+shoot:50,
+tech:50,
+pass:50,
+physical:50,
+
+goals:0,
+matches:0
+};
+
+document.getElementById("createScreen").style.display="none";
+document.getElementById("gameScreen").style.display="block";
+
+log("Kariyer başladı.");
+updateUI();
+}
+
+function updateUI(){
+
+document.getElementById("playerName").innerText=
+player.name + " (" + player.position + ")";
+
+document.getElementById("age").innerText=player.age;
+document.getElementById("club").innerText=player.club;
+document.getElementById("salary").innerText=player.salary;
+document.getElementById("money").innerText=player.money;
+
+document.getElementById("speed").innerText=player.speed;
+document.getElementById("shoot").innerText=player.shoot;
+document.getElementById("tech").innerText=player.tech;
+document.getElementById("pass").innerText=player.pass;
+document.getElementById("physical").innerText=player.physical;
+}
+
+function train(){
+
+let stat=Math.floor(Math.random()*5);
+
+if(stat===0) player.speed++;
+if(stat===1) player.shoot++;
+if(stat===2) player.tech++;
+if(stat===3) player.pass++;
+if(stat===4) player.physical++;
+
+log("Antrenman yaptın ve gelişim kaydettin.");
+updateUI();
+}
+
+function playMatch(){
+
+player.matches++;
+
+let rating=
+(player.speed+
+player.shoot+
+player.tech+
+player.pass+
+player.physical)/5;
+
+let chance=Math.random()*100;
+
+if(chance < rating){
+
+player.goals++;
+
+let bonus=1000+Math.floor(Math.random()*1000);
+
+player.money+=bonus;
+
+log("⚽ GOL! Maçı etkiledin. +" + bonus + "€");
+
+}else{
+
+log("😔 Etkisiz bir maç geçirdin.");
+}
+
+updateUI();
+}
+
+function nextSeason(){
+
+player.age++;
+
+player.money += player.salary*52;
+
+log("📅 Yeni sezon başladı. Yaş: " + player.age);
+
+if(player.age===17){
+
+player.club="Galatasaray";
+player.salary=5000;
+
+log("🔥 Profesyonel sözleşme imzaladın!");
+}
+
+if(player.age===21){
+
+player.club="Ajax";
+player.salary=25000;
+
+log("✈ Avrupa transferi gerçekleşti!");
+}
+
+if(player.age===26){
+
+player.club="Real Madrid";
+player.salary=250000;
+
+log("⭐ Dünyanın en büyük kulüplerinden birine transfer oldun!");
+}
+
+if(player.age===28){
+
+log("🏆 Ballon d'Or kazandın!");
+}
+
+if(player.age>=40){
+
+alert(
+"Kariyer Bitti!\n\n" +
+"Maç: " + player.matches +
+"\nGol: " + player.goals +
+"\nPara: €" + player.money
+);
+
+location.reload();
+}
+
+updateUI();
+}
+
+function log(text){
+
+const area=document.getElementById("log");
+
+area.innerHTML += "<div>"+text+"</div>";
+
+area.scrollTop=area.scrollHeight;
+}
+
+</script>
+
+</body>
+</html>
