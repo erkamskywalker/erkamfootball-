@@ -190,7 +190,9 @@ const leagues = [
 let ball = { x: 200, y: 380, r: 10, vx: 0, vy: 0, active: false, kicked: false };
 let goal = { x: 100, y: 35, w: 200, h: 20 };
 let goalkeeper = { x: 200, y: 50, r: 13 };
-let defenders = [], isDragging = false, dragStart = {}, dragCurrent = {}, stateLocked = false;
+let defenders = [];
+let crowdPlayers = [];
+let isDragging = false, dragStart = {}, dragCurrent = {}, stateLocked = false;
 
 function createPlayer(){
     player = {
@@ -290,6 +292,14 @@ function nextTask() {
     ball.y = 330 + Math.random() * 100;
     ball.vx = 0; ball.vy = 0; ball.active = false; ball.kicked = false;
     goalkeeper.x = 200; defenders = [];
+    crowdPlayers = [];
+    for(let i=0;i<8;i++){
+        crowdPlayers.push({
+            x: 60 + Math.random()*280,
+            y: 80 + Math.random()*250,
+            team: Math.random()>0.5 ? "home" : "away"
+        });
+    }
 
     if (activityType === 'match' && currentStep > 3) {
         defenders.push(
@@ -348,42 +358,59 @@ function gameLoop() {
     if(document.getElementById("matchOverlay").style.display === "flex") animId = requestAnimationFrame(gameLoop);
 }
 
+
 function draw() {
-    ctx.clearRect(0, 0, 400, 480);
-    // Ceza Sahası Çizgisi
-    ctx.strokeStyle = "rgba(255,255,255,0.35)"; ctx.lineWidth = 3;
-    ctx.strokeRect(40, 35, 320, 160);
-    
-    // Kale İçi Beyazlık
-    ctx.fillStyle = "white"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
-    
-    // Kaleci
-    if (currentStep <= 3 || activityType === 'train') {
-        ctx.beginPath(); ctx.arc(goalkeeper.x, goalkeeper.y, goalkeeper.r, 0, 7);
-        ctx.fillStyle = "#f97316"; ctx.fill(); ctx.strokeStyle="black"; ctx.stroke();
-    }
-    
-    // Defanslar
-    defenders.forEach(d => {
-        ctx.beginPath(); ctx.arc(d.x, d.y, 13, 0, 7);
-        ctx.fillStyle = "#ef4444"; ctx.fill(); ctx.strokeStyle="white"; ctx.stroke();
+
+    ctx.clearRect(0,0,400,480);
+
+    ctx.fillStyle="#16a34a";
+    ctx.fillRect(0,0,400,480);
+
+    ctx.strokeStyle="white";
+    ctx.lineWidth=2;
+
+    ctx.beginPath();
+    ctx.arc(200,240,50,0,Math.PI*2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0,240);
+    ctx.lineTo(400,240);
+    ctx.stroke();
+
+    ctx.strokeRect(60,30,280,120);
+
+    ctx.fillStyle="white";
+    ctx.fillRect(140,15,120,12);
+
+    ctx.font="22px Arial";
+    ctx.fillText("🧤",goalkeeper.x-10,55);
+
+    crowdPlayers.forEach(p=>{
+        ctx.font="22px Arial";
+        ctx.fillText(p.team==="home" ? "🔵" : "⚪", p.x, p.y);
     });
 
-    // NSS Şut Oku
-    if (isDragging && !ball.kicked) {
-        ctx.beginPath(); ctx.moveTo(ball.x, ball.y);
-        let tX = ball.x + (dragStart.x - dragCurrent.x);
-        let tY = ball.y + (dragStart.y - dragCurrent.y);
-        ctx.lineTo(tX, tY);
-        ctx.strokeStyle = "#fbbf24"; ctx.lineWidth = 4;
-        ctx.setLineDash([6, 4]); ctx.stroke(); ctx.setLineDash([]);
-        
-        ctx.beginPath(); ctx.arc(tX, tY, 5, 0, 7); ctx.fillStyle="#fbbf24"; ctx.fill();
+    defenders.forEach(d=>{
+        ctx.font="22px Arial";
+        ctx.fillText("⚪", d.x, d.y);
+    });
+
+    if(isDragging && !ball.kicked){
+        ctx.beginPath();
+        ctx.moveTo(ball.x,ball.y);
+
+        let tx = ball.x + (dragStart.x-dragCurrent.x);
+        let ty = ball.y + (dragStart.y-dragCurrent.y);
+
+        ctx.lineTo(tx,ty);
+        ctx.strokeStyle="orange";
+        ctx.lineWidth=5;
+        ctx.stroke();
     }
 
-    // Top
-    ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, 7);
-    ctx.fillStyle = "white"; ctx.fill(); ctx.strokeStyle="black"; ctx.stroke();
+    ctx.font="20px Arial";
+    ctx.fillText("⚽", ball.x-10, ball.y+7);
 }
 
 function finishActivity() {
