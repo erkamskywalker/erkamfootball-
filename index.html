@@ -2,276 +2,278 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ErkamFootball - Fixed NSS Pro</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ErkamFootball - Life & Career</title>
 <style>
-body{ background:#0f172a; color:white; font-family:Arial, sans-serif; margin:0; padding:20px; user-select: none; }
-.container{ max-width:900px; margin:auto; }
-.card{ background:#1e293b; padding:15px; border-radius:12px; margin-bottom:15px; }
-button{ padding:10px 15px; border:none; border-radius:8px; cursor:pointer; margin:5px; background:#22c55e; color:white; font-weight:bold; }
-button:disabled { background: #475569; cursor: not-allowed; }
-input,select{ padding:8px; width:100%; margin-bottom:10px; border-radius:6px; border:none; box-sizing: border-box; }
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stat{ background: #334155; padding: 8px; border-radius: 6px; text-align: center; }
-.log{ background:black; padding:10px; border-radius:8px; height:140px; overflow-y:auto; font-size: 0.9rem; }
-#gameCanvasContainer { display: none; text-align: center; }
-#gameCanvas { background: #15803d; border: 4px solid #f8fafc; border-radius: 8px; cursor: crosshair; display: block; width: 100%; max-width: 400px; margin: 10px auto; touch-action: none; }
-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-th, td { padding: 6px; text-align: left; border-bottom: 1px solid #334155; }
-th { background: #334155; }
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 999; }
-.modal-content { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; border: 2px solid #22c55e; }
+:root { --p: #22c55e; --bg: #0f172a; --card: #1e293b; }
+body{ background: var(--bg); color:white; font-family: 'Segoe UI', sans-serif; margin:0; user-select: none; overflow-x: hidden; }
+.container{ max-width:600px; margin:auto; padding: 20px; }
+.card{ background: var(--card); padding:20px; border-radius:16px; margin-bottom:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+button{ padding:12px; border:none; border-radius:10px; cursor:pointer; background: var(--p); color:white; font-weight:bold; transition: 0.2s; }
+button:hover{ transform: scale(1.03); opacity: 0.9; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+.stat{ background: #334155; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; }
+.shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.shop-item { background: #334155; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #475569; }
+.shop-item img { font-size: 2rem; display: block; margin-bottom: 10px; }
+
+/* Maç Ekranı Katmanı */
+#matchOverlay { 
+    display: none; position: fixed; top:0; left:0; width:100%; height:100%; 
+    background: #064e3b; z-index: 1000; flex-direction: column; align-items: center; justify-content: center;
+}
+#gameCanvas { background: #15803d; border: 5px solid white; border-radius: 12px; touch-action: none; max-width: 90vw; }
+
+.tab-btn { background: #334155; flex: 1; margin: 0 5px; }
+.tab-active { background: var(--p); }
+.nav { display: flex; margin-bottom: 20px; }
+
+.owned-badge { font-size: 0.7rem; background: var(--p); padding: 2px 6px; border-radius: 4px; margin-top: 5px; display: inline-block; }
 </style>
 </head>
 <body>
 
-<div class="container">
-<h1>⚽ ErkamFootball Pro</h1>
+<div id="mainUI" class="container">
+    <h1 style="text-align:center; color:var(--p);">⚽ ErkamFootball</h1>
 
-<div id="createScreen" class="card">
-<h2>Kariyerine Başla</h2>
-<input id="name" placeholder="Oyuncu Adı">
-<select id="position">
-<option>Forvet</option><option>Kanat</option><option>Orta Saha</option><option>Defans</option>
-</select>
-<button onclick="createPlayer()">Kariyere Başla</button>
+    <div id="createScreen" class="card">
+        <h2>Yeni Kariyer</h2>
+        <input id="name" placeholder="Oyuncu Adı" style="width:100%; padding:10; margin-bottom:10px; border-radius:5px; border:none;">
+        <button onclick="createPlayer()" style="width:100%">Kariyere Başla</button>
+    </div>
+
+    <div id="gameScreen" style="display:none;">
+        <!-- Header Karakter -->
+        <div class="card">
+            <div style="display:flex; justify-content:space-between;">
+                <h2 id="playerName" style="margin:0"></h2>
+                <span id="playerClub" style="color:var(--p); font-weight:bold;"></span>
+            </div>
+            <div class="stat-grid">
+                <div class="stat">⚡ Hız: <b id="speed"></b></div>
+                <div class="stat">🎯 Şut: <b id="shoot"></b></div>
+            </div>
+            <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin-top:10px;">
+                💰 Banka: <b id="money" style="color:#fbbf24"></b><br>
+                📅 Hafta: <b id="matchWeek"></b> / 50
+            </div>
+        </div>
+
+        <!-- Sekmeler -->
+        <div class="nav">
+            <button class="tab-btn tab-active" onclick="showTab('career')">Kariyer</button>
+            <button class="tab-btn" onclick="showTab('shop')">Mağaza</button>
+            <button class="tab-btn" onclick="showTab('assets')">Mülklerim</button>
+        </div>
+
+        <!-- Kariyer Sekmesi -->
+        <div id="tab-career">
+            <div class="card">
+                <h3>Sıradaki Etkinlik</h3>
+                <button onclick="startMatch()" style="width:100%; background:#3b82f6; margin-bottom:10px;">🏟️ MAÇA ÇIK</button>
+                <button onclick="train()" style="width:100%; background:#6366f1;">🏋️ ANTRENMAN YAP</button>
+            </div>
+            <div class="card">
+                <h3>Haberler</h3>
+                <div id="log" style="font-size:0.8rem; color:#cbd5e1; max-height:80px; overflow-y:auto;"></div>
+            </div>
+        </div>
+
+        <!-- Mağaza Sekmesi -->
+        <div id="tab-shop" style="display:none;">
+            <div class="shop-grid" id="shopItems"></div>
+        </div>
+
+        <!-- Mülkler Sekmesi -->
+        <div id="tab-assets" style="display:none;">
+            <div class="card">
+                <h3>Satın Alınanlar</h3>
+                <div id="inventoryList">Henüz bir şey almadın.</div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div id="gameScreen" style="display:none;">
-<div class="card">
-<h2 id="playerName"></h2>
-<p id="playerInfo"></p>
-<div class="stat-grid">
-    <div class="stat">⚡ Hız: <span id="speed"></span></div>
-    <div class="stat">🎯 Şut: <span id="shoot"></span></div>
-    <div class="stat">🎨 Teknik: <span id="tech"></span></div>
-    <div class="stat">🧠 Pas: <span id="pass"></span></div>
-</div>
-<p>💰 Banka: €<span id="money"></span> | Maaş: €<span id="salary"></span></p>
-</div>
-
-<div class="card">
-    <h3>🏆 Lig: <span id="currentLeagueName"></span></h3>
-    <p>📅 <b>Hafta:</b> <span id="matchWeek">1</span> / 50 | 📊 <b>Puanın:</b> <span id="teamPoints">0</span></p>
-    <p>⚽ <b>Sezon Gollerin:</b> <span id="seasonGoals">0</span> | 🏟️ <b>Top. Maç:</b> <span id="totalMatches">0</span></p>
-    <button onclick="showLeagueTable()">📊 Puan Durumu</button>
-</div>
-
-<div id="actionButtons" class="card">
-    <h3>Hafta İşlemleri</h3>
-    <button onclick="startActivity('train')">🏋️ Antrenman Yap</button>
-    <button onclick="startActivity('match')">🏟️ Maça Çık</button>
-</div>
-
-<div id="gameCanvasContainer" class="card">
-    <div class="overlay-text" id="statusHeader">POZİSYON</div>
-    <div id="subStatus" style="color: #cbd5e1; font-size:0.9rem;">Fırlat!</div>
+<!-- MAÇ EKRANI (FULLSCREEN) -->
+<div id="matchOverlay">
+    <div id="matchScore" style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">POZİSYON</div>
     <canvas id="gameCanvas" width="400" height="500"></canvas>
-    <div id="gameFeedback" style="height: 20px; font-weight: bold; color: #fbbf24;"></div>
-</div>
-
-<div id="tableModal" class="modal">
-    <div class="modal-content">
-        <h3>Lig Tablosu</h3>
-        <table><thead><tr><th>#</th><th>Takım</th><th>P</th></tr></thead><tbody id="tableBody"></tbody></table>
-        <br><button onclick="closeModal('tableModal')" style="background:#ef4444;">Kapat</button>
-    </div>
-</div>
-
-<div id="transferModal" class="modal">
-    <div class="modal-content">
-        <h2 style="color: #eab308;">✈️ TRANSFER!</h2>
-        <p id="offerText"></p>
-        <h3 id="offerSalary" style="color: #22c55e;"></h3>
-        <button onclick="acceptTransfer()">✅ Kabul Et</button>
-        <button onclick="rejectTransfer()" style="background:#ef4444;">❌ Reddet</button>
-    </div>
-</div>
-
-<div class="card"><h3>Kariyer Günlüğü</h3><div id="log" class="log"></div></div>
-</div>
+    <div id="matchFeedback" style="color:#fbbf24; margin-top:10px; font-weight:bold;"></div>
+    <p style="font-size:0.8rem; opacity:0.7;">Topu geriye çekip fırlat!</p>
 </div>
 
 <script>
 let player = null;
-let canvas, ctx, animId;
-let activityType = '', currentStep = 0, successCount = 0;
-let currentWeek = 1, myTeamPoints = 0, mySeasonGoals = 0, leagueIndex = 0;
-let leagueTeamsData = [];
-
-const leagues = [
-    { name: "Trendyol Süper Lig", teams: ["Sizin Takım", "Galatasaray", "Fenerbahçe", "Beşiktaş", "Trabzonspor", "Başakşehir"] },
-    { name: "Premier League", teams: ["Man City", "Arsenal", "Liverpool", "Chelsea", "Man United", "Sizin Takım"] },
-    { name: "La Liga", teams: ["Real Madrid", "Barcelona", "Atletico Madrid", "Sociedad", "Sizin Takım", "Villareal"] }
+let inventory = [];
+const items = [
+    { id:1, n: "Enerji İçeceği", p: 500, i: "🥤" },
+    { id:2, n: "Yeni Krampon", p: 2000, i: "👟" },
+    { id:3, n: "Oyun Konsolu", p: 5000, i: "🎮" },
+    { id:4, n: "Tofaş Doğan SLX", p: 15000, i: "🚗" },
+    { id:5, n: "Rolex Saat", p: 45000, i: "⌚" },
+    { id:6, n: "BMW M4", p: 120000, i: "🚙" },
+    { id:7, n: "Lüks Daire", p: 500000, i: "🏢" },
+    { id:8, n: "Porsche 911", p: 950000, i: "🏎️" },
+    { id:9, n: "Yüzme Havuzlu Villa", p: 2500000, i: "🏡" },
+    { id:10, n: "Lamborghini", p: 5000000, i: "🏎️" },
+    { id:11, n: "Özel Yat", p: 12000000, i: "🛥️" },
+    { id:12, n: "Malikane", p: 35000000, i: "🏰" },
+    { id:13, n: "Özel Jet", p: 100000000, i: "🛩️" },
+    { id:14, n: "Futbol Kulübü", p: 500000000, i: "🏟️" },
+    { id:15, n: "Ada Satın Al", p: 1000000000, i: "🏝️" }
 ];
 
-let ball = { x: 200, y: 400, r: 10, vx: 0, vy: 0, active: false, kicked: false };
-let goal = { x: 120, y: 30, w: 160, h: 15 };
-let goalkeeper = { x: 200, y: 45, r: 12 };
-let defenders = [], isDragging = false, dragStart = {}, dragCurrent = {}, stateLocked = false;
+let canvas, ctx, isDragging = false, dragStart = {}, dragCurrent = {};
+let ball = { x: 200, y: 400, r: 10, vx: 0, vy: 0, active: false };
+let goal = { x: 100, y: 30, w: 200, h: 20 };
+let currentStep = 0, successCount = 0;
 
-function createPlayer(){
-    player = {
-        name: document.getElementById("name").value || "Erkam",
-        position: document.getElementById("position").value,
-        age: 15, club: "Altyapı", salary: 1000, money: 2000,
-        speed: 50, shoot: 50, tech: 50, pass: 50, totalMatches: 0, totalGoals: 0
+function createPlayer() {
+    player = { 
+        name: document.getElementById("name").value || "Erkam", 
+        money: 5000, speed: 50, shoot: 50, week: 1, club: "Altyapı", salary: 1500 
     };
     document.getElementById("createScreen").style.display = "none";
     document.getElementById("gameScreen").style.display = "block";
     canvas = document.getElementById("gameCanvas"); ctx = canvas.getContext("2d");
-    initLeagueData(); initControls(); updateUI();
-    log("Kariyer başladı! Maçları kazanmaya bak.");
+    initControls(); renderShop(); updateUI();
 }
 
-function initLeagueData() {
-    leagueTeamsData = leagues[leagueIndex].teams.map(t => ({ name: t === "Sizin Takım" ? player.club : t, points: 0 }));
-    myTeamPoints = 0; mySeasonGoals = 0; currentWeek = 1;
+function updateUI() {
+    document.getElementById("playerName").innerText = player.name;
+    document.getElementById("playerClub").innerText = player.club;
+    document.getElementById("money").innerText = "€" + player.money.toLocaleString();
+    document.getElementById("speed").innerText = player.speed;
+    document.getElementById("shoot").innerText = player.shoot;
+    document.getElementById("matchWeek").innerText = player.week;
 }
 
-function updateUI(){
-    document.getElementById("playerName").innerText = `${player.name} (${player.position})`;
-    document.getElementById("playerInfo").innerText = `Yaş: ${player.age} | Kulüp: ${player.club}`;
-    document.getElementById("speed").innerText = player.speed; document.getElementById("shoot").innerText = player.shoot;
-    document.getElementById("tech").innerText = player.tech; document.getElementById("pass").innerText = player.pass;
-    document.getElementById("money").innerText = player.money; document.getElementById("salary").innerText = player.salary;
-    document.getElementById("currentLeagueName").innerText = leagues[leagueIndex].name;
-    document.getElementById("matchWeek").innerText = currentWeek;
-    document.getElementById("teamPoints").innerText = myTeamPoints;
-    document.getElementById("seasonGoals").innerText = mySeasonGoals;
-    document.getElementById("totalMatches").innerText = player.totalMatches;
+function showTab(tab) {
+    ["career", "shop", "assets"].forEach(t => document.getElementById("tab-"+t).style.display = (t===tab?'block':'none'));
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("tab-active", b.innerText.toLowerCase().includes(tab === 'assets' ? 'mülk' : tab)));
 }
 
-function startActivity(type) {
-    activityType = type; currentStep = 0; successCount = 0;
-    document.getElementById("actionButtons").style.display = "none";
-    document.getElementById("gameCanvasContainer").style.display = "block";
-    nextTask();
-}
-
-function nextTask() {
-    currentStep++;
-    if (currentStep > (activityType === 'train' ? 3 : 5)) { finishActivity(); return; }
-    stateLocked = false; document.getElementById("gameFeedback").innerText = "";
-    ball.x = 100 + Math.random() * 200; ball.y = 380 + Math.random() * 60;
-    ball.vx = 0; ball.vy = 0; ball.active = false; ball.kicked = false;
-    goalkeeper.x = 200; defenders = [];
-    if (activityType === 'match' && currentStep > 3) {
-        defenders.push({ x: 130 + Math.random()*50, y: 220, r: 12, speed: 1.1 }, { x: 220 + Math.random()*50, y: 280, r: 12, speed: 0.9 });
-    }
-    if(!animId) gameLoop();
-}
-
-function gameLoop() {
-    if ((activityType === 'train' || currentStep <= 3) && ball.active) {
-        let gkSpeed = 2.5 + (player.shoot / 60);
-        let diff = ball.x - goalkeeper.x;
-        if(Math.abs(diff) > 5) goalkeeper.x += Math.sign(diff) * gkSpeed;
-    }
-    if (activityType === 'match' && currentStep > 3) {
-        defenders.forEach(def => {
-            let dx = ball.x - def.x, dy = ball.y - def.y, dist = Math.hypot(dx, dy);
-            if (dist > 5) { def.x += (dx/dist)*def.speed; def.y += (dy/dist)*def.speed; }
-            if (dist < 22 && !stateLocked) { ball.active = false; stateLocked = true; document.getElementById("gameFeedback").innerText = "❌ Defans kaptı!"; setTimeout(nextTask, 1200); }
-        });
-    }
-    if (ball.active) {
-        ball.x += ball.vx; ball.y += ball.vy; ball.vx *= 0.98; ball.vy *= 0.98;
-        if (Math.hypot(ball.x - goalkeeper.x, ball.y - goalkeeper.y) < 22 && !stateLocked && currentStep <= 3) {
-            ball.active = false; stateLocked = true; document.getElementById("gameFeedback").innerText = "❌ Kurtarıldı!"; setTimeout(nextTask, 1200);
-        }
-        if (ball.y <= goal.y + goal.h && !stateLocked) {
-            ball.active = false; stateLocked = true;
-            if (ball.x >= goal.x && ball.x <= goal.x + goal.w) { successCount++; document.getElementById("gameFeedback").innerText = "⚽ GOOOOL!"; }
-            else { document.getElementById("gameFeedback").innerText = "❌ Dışarı!"; }
-            setTimeout(nextTask, 1200);
-        }
-    }
-    draw(); animId = requestAnimationFrame(gameLoop);
-}
-
-function draw() {
-    ctx.clearRect(0, 0, 400, 500);
-    ctx.strokeStyle = "white"; ctx.strokeRect(40, 30, 320, 140);
-    ctx.fillStyle = "white"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
-    if (currentStep <= 3) { ctx.beginPath(); ctx.arc(goalkeeper.x, 45, 12, 0, 7); ctx.fillStyle = "orange"; ctx.fill(); }
-    defenders.forEach(d => { ctx.beginPath(); ctx.arc(d.x, d.y, 12, 0, 7); ctx.fillStyle = "red"; ctx.fill(); });
-    if (isDragging && !ball.kicked) { ctx.beginPath(); ctx.moveTo(ball.x, ball.y); ctx.lineTo(ball.x + (dragStart.x - dragCurrent.x), ball.y + (dragStart.y - dragCurrent.y)); ctx.strokeStyle = "yellow"; ctx.stroke(); }
-    ctx.beginPath(); ctx.arc(ball.x, ball.y, 10, 0, 7); ctx.fillStyle = "white"; ctx.fill(); ctx.stroke();
-}
-
-function finishActivity() {
-    cancelAnimationFrame(animId); animId = null;
-    document.getElementById("gameCanvasContainer").style.display = "none";
-    document.getElementById("actionButtons").style.display = "block";
-    player.money += player.salary;
-
-    if (activityType === 'match') {
-        player.totalMatches++; player.totalGoals += successCount; mySeasonGoals += successCount;
-        let enemy = Math.floor(Math.random() * 3);
-        if (successCount > enemy) myTeamPoints += 3; else if (successCount === enemy) myTeamPoints += 1;
-        log(`Hafta ${currentWeek}: Maç ${successCount}-${enemy} bitti. +€${successCount*200} Prim.`);
-        player.money += (successCount * 200);
-    } else {
-        player.speed += successCount; player.shoot += successCount;
-        log(`Antrenman bitti. Yeteneklerin gelişti.`);
-    }
-
-    // Diğer takımların puanlarını simüle et
-    leagueTeamsData.forEach(t => {
-        if(t.name !== player.club) { let r = Math.random(); if(r > 0.6) t.points += 3; else if(r > 0.4) t.points += 1; }
-        else { t.points = myTeamPoints; }
+function renderShop() {
+    let html = "";
+    items.forEach(item => {
+        let owned = inventory.includes(item.id);
+        html += `<div class="shop-item">
+            <span>${item.i}</span>
+            <div style="font-weight:bold; margin:5px 0;">${item.n}</div>
+            <div style="color:#22c55e; font-size:0.9rem;">€${item.p.toLocaleString()}</div>
+            <button onclick="buyItem(${item.id})" style="width:100%; margin-top:10px; font-size:0.8rem;" ${owned?'disabled':''}>
+                ${owned ? 'Satın Alındı' : 'Satın Al'}
+            </button>
+        </div>`;
     });
+    document.getElementById("shopItems").innerHTML = html;
+}
 
-    currentWeek++;
-    if (currentWeek > 50) endSeason();
+function buyItem(id) {
+    let item = items.find(i => i.id === id);
+    if (player.money >= item.p) {
+        player.money -= item.p;
+        inventory.push(id);
+        log(`Satın alındı: ${item.n}`);
+        renderShop(); renderInventory(); updateUI();
+    } else { alert("Yetersiz bakiye!"); }
+}
+
+function renderInventory() {
+    let list = inventory.map(id => {
+        let item = items.find(i => i.id === id);
+        return `<div class="stat" style="margin-bottom:5px;">${item.i} ${item.n}</div>`;
+    }).join("");
+    document.getElementById("inventoryList").innerHTML = list || "Henüz bir şey almadın.";
+}
+
+function train() {
+    player.speed += 2; player.shoot += 2; player.week++;
+    player.money += player.salary;
+    log("Antrenman yapıldı, yetenekler arttı!");
+    if(player.week > 50) resetSeason();
     updateUI();
 }
 
-function endSeason() {
-    log("Sezon bitti! Teklifler hazırlanıyor...");
-    let avg = (player.speed + player.shoot + player.tech + player.pass) / 4;
-    let club = avg > 85 ? "Real Madrid" : (avg > 65 ? "Galatasaray" : "Ankaragücü");
-    let sal = avg * 200;
-    document.getElementById("offerText").innerText = `${club} takımından teklif var!`;
-    document.getElementById("offerSalary").innerText = `Maaş: €${Math.floor(sal)}`;
-    window.currentOffer = { club, salary: Math.floor(sal), leagueIdx: avg > 75 ? 1 : 0 };
-    document.getElementById("transferModal").style.display = "flex";
+function startMatch() {
+    document.getElementById("matchOverlay").style.display = "flex";
+    currentStep = 0; successCount = 0;
+    resetBall();
+    gameLoop();
 }
 
-function acceptTransfer() {
-    player.club = window.currentOffer.club; player.salary = window.currentOffer.salary;
-    leagueIndex = window.currentOffer.leagueIdx; player.age++;
-    initLeagueData(); closeModal("transferModal"); updateUI();
+function resetBall() {
+    ball.x = 200; ball.y = 420; ball.vx = 0; ball.vy = 0; ball.active = false;
 }
 
-function rejectTransfer() { player.age++; initLeagueData(); closeModal("transferModal"); updateUI(); }
-
-function showLeagueTable() {
-    leagueTeamsData.sort((a,b) => b.points - a.points);
-    let h = ""; leagueTeamsData.forEach((t, i) => { h += `<tr><td>${i+1}</td><td>${t.name}</td><td>${t.points}</td></tr>`; });
-    document.getElementById("tableBody").innerHTML = h; document.getElementById("tableModal").style.display = "flex";
+function gameLoop() {
+    if(ball.active) {
+        ball.x += ball.vx; ball.y += ball.vy;
+        ball.vx *= 0.98; ball.vy *= 0.98;
+        if(ball.y <= goal.y + goal.h) {
+            if(ball.x > goal.x && ball.x < goal.x + goal.w) { successCount++; document.getElementById("matchFeedback").innerText = "GOOOL!"; }
+            else { document.getElementById("matchFeedback").innerText = "DIŞARI!"; }
+            ball.active = false;
+            setTimeout(() => {
+                currentStep++;
+                if(currentStep < 3) { resetBall(); document.getElementById("matchFeedback").innerText = ""; }
+                else { endMatch(); }
+            }, 1000);
+        }
+    }
+    draw();
+    if(document.getElementById("matchOverlay").style.display === "flex") requestAnimationFrame(gameLoop);
 }
 
-function closeModal(id) { document.getElementById(id).style.display = "none"; }
+function draw() {
+    ctx.clearRect(0,0,400,500);
+    ctx.fillStyle = "white"; ctx.fillRect(goal.x, goal.y, goal.w, goal.h); // Kale
+    if(isDragging) {
+        ctx.beginPath(); ctx.moveTo(ball.x, ball.y);
+        ctx.lineTo(ball.x + (dragStart.x - dragCurrent.x), ball.y + (dragStart.y - dragCurrent.y));
+        ctx.strokeStyle = "yellow"; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, 7); ctx.fillStyle="white"; ctx.fill();
+}
+
+function endMatch() {
+    document.getElementById("matchOverlay").style.display = "none";
+    let gain = successCount * 500;
+    player.money += (player.salary + gain);
+    player.week++;
+    log(`Maç bitti. ${successCount} gol attın. €${gain} prim kazandın!`);
+    if(player.week > 50) resetSeason();
+    updateUI();
+}
+
+function log(msg) {
+    let l = document.getElementById("log");
+    l.innerHTML = `> ${msg}<br>` + l.innerHTML;
+}
 
 function initControls() {
-    const getPos = (e) => {
+    const getPos = e => {
         let r = canvas.getBoundingClientRect();
-        let cX = e.touches ? e.touches[0].clientX : e.clientX;
-        let cY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: (cX - r.left) * (400/r.width), y: (cY - r.top) * (500/r.height) };
+        let c = e.touches ? e.touches[0] : e;
+        return { x: (c.clientX - r.left) * (400/r.width), y: (c.clientY - r.top) * (500/r.height) };
     };
-    canvas.addEventListener("mousedown", (e) => { let p = getPos(e); if(Math.hypot(p.x-ball.x, p.y-ball.y)<30){ isDragging = true; dragStart = p; dragCurrent = p; } });
-    window.addEventListener("mousemove", (e) => { if(isDragging) dragCurrent = getPos(e); });
+    canvas.addEventListener("mousedown", e => { let p = getPos(e); if(Math.hypot(p.x-ball.x, p.y-ball.y)<30){ isDragging=true; dragStart=p; dragCurrent=p; } });
+    window.addEventListener("mousemove", e => { if(isDragging) dragCurrent=getPos(e); });
     window.addEventListener("mouseup", () => {
         if(isDragging){
             ball.vx = (dragStart.x - dragCurrent.x) * 0.15; ball.vy = (dragStart.y - dragCurrent.y) * 0.15;
-            ball.active = true; ball.kicked = true; isDragging = false;
+            ball.active = true; isDragging = false;
+        }
+    });
+    canvas.addEventListener("touchstart", e => { let p = getPos(e); if(Math.hypot(p.x-ball.x, p.y-ball.y)<30){ isDragging=true; dragStart=p; dragCurrent=p; } });
+    window.addEventListener("touchmove", e => { if(isDragging) dragCurrent=getPos(e); });
+    window.addEventListener("touchend", () => {
+        if(isDragging){
+            ball.vx = (dragStart.x - dragCurrent.x) * 0.15; ball.vy = (dragStart.y - dragCurrent.y) * 0.15;
+            ball.active = true; isDragging = false;
         }
     });
 }
 </script>
 </body>
-    </html>
+</html>
